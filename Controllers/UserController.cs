@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using staj_ecommerce_api.Models;
 using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace staj_ecommerce_api.Controllers
 {
@@ -96,7 +98,7 @@ namespace staj_ecommerce_api.Controllers
 
         // POST: api/User
         [HttpPost]
-        public async Task<IActionResult> InsertUser(User user)
+        public async Task<IActionResult> PostUser(User user)
         {
             int result;
 
@@ -108,7 +110,7 @@ namespace staj_ecommerce_api.Controllers
                 };
 
                 command.Parameters.AddWithValue("u_name", user.UserName);
-                command.Parameters.AddWithValue("u_password", user.Password);
+                command.Parameters.AddWithValue("u_password", HashPassword(user.Password));
                 command.Parameters.AddWithValue("u_first_name", user.FirstName);
                 command.Parameters.AddWithValue("u_last_name", user.LastName);
                 command.Parameters.AddWithValue("u_phone_number", user.PhoneNumber);
@@ -121,14 +123,21 @@ namespace staj_ecommerce_api.Controllers
 
                 result = (int)command.Parameters["result"].Value;
                 connection.Close();
+
+                if (result == 0)
+                {
+                    return Conflict(new { message = "A user with the same name already exists." });
+                }
+
+                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
             }
 
-            if (result == 0)
+            string HashPassword(string password)
             {
-                return Conflict(new { message = "A user with the same name already exists." });
+                var sha = SHA512.Create();
+                var passwordBytes = Encoding.UTF8.GetBytes(password);
+                return Convert.ToBase64String(sha.ComputeHash(passwordBytes));
             }
-
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
         // PUT: api/User/{id}

@@ -100,51 +100,50 @@ namespace staj_ecommerce_api.Controllers
         [HttpPost]
         public async Task<IActionResult> PostUser(User user)
         {
-            int result;
-
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            if(ModelState.IsValid)
             {
-                MySqlCommand command = new MySqlCommand("InsertUser", connection)
+                int result;
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
-                    CommandType = CommandType.StoredProcedure
-                };
+                    MySqlCommand command = new MySqlCommand("InsertUser", connection)
+                    {
+                        CommandType = CommandType.StoredProcedure
+                    };
 
-                command.Parameters.AddWithValue("u_name", user.UserName);
-                command.Parameters.AddWithValue("u_password", HashPassword(user.Password));
-                command.Parameters.AddWithValue("u_first_name", user.FirstName);
-                command.Parameters.AddWithValue("u_last_name", user.LastName);
-                command.Parameters.AddWithValue("u_phone_number", user.PhoneNumber);
-                command.Parameters.AddWithValue("u_email", user.Email);
-                command.Parameters.AddWithValue("u_type", user.UserType);
-                command.Parameters.Add("result", MySqlDbType.Int32).Direction = ParameterDirection.Output;
+                    command.Parameters.AddWithValue("u_name", user.UserName);
+                    command.Parameters.AddWithValue("u_password", HashPassword(user.Password));
+                    command.Parameters.AddWithValue("u_first_name", user.FirstName);
+                    command.Parameters.AddWithValue("u_last_name", user.LastName);
+                    command.Parameters.AddWithValue("u_phone_number", user.PhoneNumber);
+                    command.Parameters.AddWithValue("u_email", user.Email);
+                    command.Parameters.AddWithValue("u_type", user.UserType);
+                    command.Parameters.Add("result", MySqlDbType.Int32).Direction = ParameterDirection.Output;
 
-                connection.Open();
-                await command.ExecuteNonQueryAsync();
+                    connection.Open();
+                    await command.ExecuteNonQueryAsync();
 
-                result = (int)command.Parameters["result"].Value;
-                connection.Close();
+                    result = (int)command.Parameters["result"].Value;
+                    connection.Close();
 
-                if (result == 0)
-                {
-                    return Conflict(new { message = "A user with the same name already exists." });
+                    if (result == 0)
+                    {
+                        return Conflict(new { message = "A user with the same name already exists." });
+                    }
+
+                    return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
                 }
-
-                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
             }
 
-            string HashPassword(string password)
-            {
-                var sha = SHA512.Create();
-                var passwordBytes = Encoding.UTF8.GetBytes(password);
-                return Convert.ToBase64String(sha.ComputeHash(passwordBytes));
-            }
+            return BadRequest();
+            
         }
 
         // PUT: api/User/{id}
         [HttpPut]
         public async Task<IActionResult> PutUser(User user)
         {
-            if(user.Id != null)
+            if(user.Id != null && ModelState.IsValid)
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
@@ -192,6 +191,13 @@ namespace staj_ecommerce_api.Controllers
             }
 
             return NoContent();
+        }
+
+        string HashPassword(string password)
+        {
+            var sha = SHA512.Create();
+            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            return Convert.ToBase64String(sha.ComputeHash(passwordBytes));
         }
     }
 }

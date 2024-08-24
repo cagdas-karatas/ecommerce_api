@@ -11,10 +11,12 @@ namespace staj_ecommerce_api.Controllers
     public class ProductController : ControllerBase
     {
         private readonly string connectionString;
+        private readonly IWebHostEnvironment hostEnvironment;
 
-        public ProductController(IConfiguration configuration)
+        public ProductController(IConfiguration configuration, IWebHostEnvironment _hostEnvironment)
         {
             this.connectionString = configuration.GetConnectionString("mysql_connection_string");
+            this.hostEnvironment = _hostEnvironment;
         }
 
         [HttpGet]
@@ -44,6 +46,7 @@ namespace staj_ecommerce_api.Controllers
                         product.ProductCategory = reader.GetString("product_category");
                         product.Price = reader.GetFloat("price");
                         product.ImageUrl = reader.GetString("image_url");
+                        product.ImageFile = null;
                         product.Rate = ConvertFromDBVal<float?>(reader.GetValue("rate"));
                         product.CountOfReviews = ConvertFromDBVal<int?>(reader.GetValue("count_of_reviews"));
 
@@ -83,6 +86,7 @@ namespace staj_ecommerce_api.Controllers
                             ProductCategory = reader.GetString("product_category"),
                             Price = reader.GetFloat("price"),
                             ImageUrl = reader.GetString("image_url"),
+                            ImageFile = null,
                             Rate = reader.GetFloat("rate"),
                             CountOfReviews = reader.GetInt32("count_of_reviews")
                         };
@@ -100,10 +104,11 @@ namespace staj_ecommerce_api.Controllers
 
         // POST: api/Product
         [HttpPost]
-        public async Task<IActionResult> PostProduct(Product product)
+        public async Task<IActionResult> PostProduct([FromForm] Product product)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
+                product.ImageUrl = await SaveImage(product.ImageFile);
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     MySqlCommand command = new MySqlCommand("InsertProduct", connection)
@@ -133,7 +138,7 @@ namespace staj_ecommerce_api.Controllers
 
         // PUT: api/Product/{id}
         [HttpPut]
-        public async Task<IActionResult> UpdateProduct(Product product)
+        public async Task<IActionResult> PutProduct(Product product)
         {
             if(product.Id != null && ModelState.IsValid)
             {
@@ -196,6 +201,19 @@ namespace staj_ecommerce_api.Controllers
             {
                 return (T)obj;
             }
+        }
+
+        [NonAction]
+        public async Task<string> SaveImage(IFormFile imageFile)
+        {
+            string imageName = new String(Path.GetFileNameWithoutExtension(imageFile.FileName).Take(10).ToArray()).Replace(' ', '-');
+            imageName += Path.GetExtension(imageFile.FileName);
+            var imagePath = Path.Combine(hostEnvironment.ContentRootPath, "Images", imageName);
+            using (var fileStream = new FileStream(imagePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(fileStream);
+            }
+            return imageName;
         }
     }
 }

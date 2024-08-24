@@ -1,3 +1,5 @@
+using Microsoft.Extensions.FileProviders;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -38,6 +40,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowSpecificOrigin");
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Images")),
+    RequestPath = "/Images",
+});
 
 app.UseSession();
 

@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using staj_ecommerce_api.Models;
+using staj_ecommerce_api.Security;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,12 +16,15 @@ namespace staj_ecommerce_api.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
+        private readonly IConfiguration configuration;
         private readonly string connectionString;
         public LoginController(IConfiguration _configuration)
         {
             this.connectionString = _configuration.GetConnectionString("mysql_connection_string");
+            this.configuration = _configuration;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult> LoginUser(UserDTO _user)
         {
@@ -38,18 +43,16 @@ namespace staj_ecommerce_api.Controllers
                 {
                     if (reader.Read())
                     {
-                        user = new User
-                        {
-                            UserId = reader.GetInt32("id"),
-                            UserName = reader.GetString("user_name"),
-                            Password = reader.GetString("password"),
-                            FirstName = reader.GetString("first_name"),
-                            LastName = reader.GetString("last_name"),
-                            PhoneNumber = reader.GetString("phone_number"),
-                            Email = reader.GetString("email"),
-                            UserType = reader.GetString("user_type"),
-                            ShopId = reader.GetInt32("shop_id")
-                        };
+                        user = new User();
+                        user.UserId = reader.GetInt32("user_id");
+                        user.UserName = reader.GetString("user_name");
+                        user.ShopId = ConvertFromDBVal<int?>(reader.GetValue("shop_id"));
+                        user.Password = reader.GetString("password");
+                        user.FirstName = reader.GetString("first_name");
+                        user.LastName = reader.GetString("last_name");
+                        user.PhoneNumber = reader.GetString("phone_number");
+                        user.Email = reader.GetString("email");
+                        user.UserType = reader.GetString("user_type");
                     }
                 }
 
@@ -57,9 +60,12 @@ namespace staj_ecommerce_api.Controllers
 
                 if (user != null)
                 {
+                    MyToken token = MyTokenHandler.CreateToken(configuration);
                     string userString = JsonConvert.SerializeObject(user);
+                    string tokenString = JsonConvert.SerializeObject(token);
                     HttpContext.Session.SetString("User", userString);
-                    return Ok(new { user = user });
+                    HttpContext.Session.SetString("Token", tokenString);
+                    return Ok(new { token = token, user = user });
                 }
 
                 return BadRequest();
@@ -84,16 +90,30 @@ namespace staj_ecommerce_api.Controllers
         public async Task<IActionResult> CheckUser()
         {
             var userString = HttpContext.Session.GetString("User");
+            var tokenString = HttpContext.Session.GetString("Token");
 
-            if (string.IsNullOrEmpty(userString))
+            if (string.IsNullOrEmpty(userString) && string.IsNullOrEmpty(tokenString))
             {
                 return BadRequest("Session datalarında eksik var");
             }
 
             return Ok(new
             {
-                user = JsonConvert.DeserializeObject<User>(userString)
+                user = JsonConvert.DeserializeObject<User>(userString),
+                token = JsonConvert.DeserializeObject<MyToken>(tokenString)
             });
+        }
+
+        public static T ConvertFromDBVal<T>(object obj)
+        {
+            if (obj == null || obj == DBNull.Value)
+            {
+                return default(T); // returns the default value for the type
+            }
+            else
+            {
+                return (T)obj;
+            }
         }
     }
 }

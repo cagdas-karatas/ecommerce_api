@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using staj_ecommerce_api.Models;
@@ -100,6 +101,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // POST: api/Product
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> PostProduct([FromForm] Product product)
         {
@@ -132,6 +134,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // PUT: api/Product/{id}
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> PutProduct(Product product)
         {
@@ -164,6 +167,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // DELETE: api/Product/{id}
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using staj_ecommerce_api.Models;
@@ -17,7 +18,7 @@ namespace staj_ecommerce_api.Controllers
             this.connectionString = configuration.GetConnectionString("mysql_connection_string");
         }
 
-        [HttpGet]
+        [HttpGet("requests")]
         public async Task<IEnumerable<ShopRequest>> GetShopRequests()
         {
             List<ShopRequest> shops = new List<ShopRequest>();
@@ -30,17 +31,20 @@ namespace staj_ecommerce_api.Controllers
 
                 connection.Open();
 
-                using (MySqlDataReader reader = await command.ExecuteReaderAsync())
+                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    shops.Add(new ShopRequest
+                    while(reader.Read())
                     {
-                        ShopRequestId = reader.GetInt32("shop_request_id"),
-                        ShopName = reader.GetString("shop_name"),
-                        TaxNumber = reader.GetString("tax_number"),
-                        CompanyPhoneNumber = reader.GetString("company_phone_number"),
-                        ApproveStatus = reader.GetString("approve_status"),
-                        UserId = reader.GetInt32("user_id")
-                    });
+                        shops.Add(new ShopRequest
+                        {
+                            ShopRequestId = reader.GetInt32("shop_request_id"),
+                            ShopName = reader.GetString("shop_name"),
+                            TaxNumber = reader.GetString("tax_number"),
+                            CompanyPhoneNumber = reader.GetString("company_phone_number"),
+                            ApproveStatus = reader.GetString("approve_status"),
+                            UserId = reader.GetInt32("user_id")
+                        });
+                    }
                 }
                 connection.Close();
             }
@@ -72,6 +76,7 @@ namespace staj_ecommerce_api.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("answer_request")]
         public async Task<IActionResult> AnswerShopRequest(int id, string response)
         {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using staj_ecommerce_api.Models;
@@ -19,6 +20,7 @@ namespace staj_ecommerce_api.Controllers
             this.connectionString = configuration.GetConnectionString("mysql_connection_string");
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
@@ -56,6 +58,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // GET: api/User/{id}
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
@@ -143,6 +146,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // PUT: api/User/{id}
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> PutUser(User user)
         {
@@ -177,6 +181,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         // DELETE: api/User/{id}
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

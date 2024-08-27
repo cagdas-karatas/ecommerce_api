@@ -37,18 +37,17 @@ namespace staj_ecommerce_api.Controllers
                 {
                     while (reader.Read())
                     {
-                        Product product= new Product();
-
-                        product.Id = reader.GetInt32("id");
-                        product.ProductName = reader.GetString("product_name");
-                        product.SellerName = reader.GetString("seller_name");
-                        product.ProductDescription = reader.GetString("product_description");
-                        product.ProductCategory = reader.GetString("product_category");
-                        product.Price = reader.GetFloat("price");
-                        product.ImageUrl = reader.GetString("image_url");
-                        product.ImageFile = null;
-                        product.Rate = ConvertFromDBVal<float?>(reader.GetValue("rate"));
-                        product.CountOfReviews = ConvertFromDBVal<int?>(reader.GetValue("count_of_reviews"));
+                        Product product= new Product
+                        {
+                            ProductId = reader.GetInt32("product_id"),
+                            ShopId = reader.GetInt32("shop_id"),
+                            ProductName = reader.GetString("product_name"),
+                            ProductDescription = reader.GetString("product_description"),
+                            CategoryId = reader.GetInt32("category_id"),
+                            Price = reader.GetFloat("price"),
+                            ImageName = reader.GetString("image_name"),
+                            ImageFile = null
+                        };
 
                         products.Add(product);
                     }
@@ -79,16 +78,14 @@ namespace staj_ecommerce_api.Controllers
                     {
                         product = new Product
                         {
-                            Id = reader.GetInt32("id"),
+                            ProductId = reader.GetInt32("product_id"),
+                            ShopId = reader.GetInt32("shop_id"),
                             ProductName = reader.GetString("product_name"),
-                            SellerName = reader.GetString("seller_name"),
                             ProductDescription = reader.GetString("product_description"),
-                            ProductCategory = reader.GetString("product_category"),
+                            CategoryId = reader.GetInt32("category_id"),
                             Price = reader.GetFloat("price"),
-                            ImageUrl = reader.GetString("image_url"),
-                            ImageFile = null,
-                            Rate = reader.GetFloat("rate"),
-                            CountOfReviews = reader.GetInt32("count_of_reviews")
+                            ImageName = reader.GetString("image_name"),
+                            ImageFile = null
                         };
                     }
                 }
@@ -108,7 +105,7 @@ namespace staj_ecommerce_api.Controllers
         {
             if (ModelState.IsValid)
             {
-                product.ImageUrl = await SaveImage(product.ImageFile);
+                product.ImageName = await SaveImage(product.ImageFile);
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     MySqlCommand command = new MySqlCommand("InsertProduct", connection)
@@ -116,21 +113,19 @@ namespace staj_ecommerce_api.Controllers
                         CommandType = CommandType.StoredProcedure
                     };
 
+                    command.Parameters.AddWithValue("p_shop_id", product.ShopId);
                     command.Parameters.AddWithValue("p_product_name", product.ProductName);
-                    command.Parameters.AddWithValue("p_seller_name", product.SellerName);
                     command.Parameters.AddWithValue("p_product_description", product.ProductDescription);
-                    command.Parameters.AddWithValue("p_product_category", product.ProductCategory);
+                    command.Parameters.AddWithValue("p_category_id", product.CategoryId);
                     command.Parameters.AddWithValue("p_price", product.Price);
-                    command.Parameters.AddWithValue("p_image_url", product.ImageUrl);
-                    command.Parameters.AddWithValue("p_rate", product.Rate);
-                    command.Parameters.AddWithValue("p_count_of_reviews", product.CountOfReviews);
+                    command.Parameters.AddWithValue("p_image_name", product.ImageName);
 
                     connection.Open();
                     await command.ExecuteNonQueryAsync();
                     connection.Close();
                 }
 
-                return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+                return CreatedAtAction(nameof(GetProduct), new { product_id = product.ProductId }, product);
             }
 
             return BadRequest();
@@ -140,7 +135,7 @@ namespace staj_ecommerce_api.Controllers
         [HttpPut]
         public async Task<IActionResult> PutProduct(Product product)
         {
-            if(product.Id != null && ModelState.IsValid)
+            if(product.ProductId != null && ModelState.IsValid)
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
@@ -149,15 +144,13 @@ namespace staj_ecommerce_api.Controllers
                         CommandType = CommandType.StoredProcedure
                     };
 
-                    command.Parameters.AddWithValue("p_id", product.Id);
+                    command.Parameters.AddWithValue("p_id", product.ProductId);
+                    command.Parameters.AddWithValue("p_shop_id", product.ShopId);
                     command.Parameters.AddWithValue("p_product_name", product.ProductName);
-                    command.Parameters.AddWithValue("p_seller_name", product.SellerName);
                     command.Parameters.AddWithValue("p_product_description", product.ProductDescription);
-                    command.Parameters.AddWithValue("p_product_category", product.ProductCategory);
+                    command.Parameters.AddWithValue("p_category_id", product.CategoryId);
                     command.Parameters.AddWithValue("p_price", product.Price);
-                    command.Parameters.AddWithValue("p_image_url", product.ImageUrl);
-                    command.Parameters.AddWithValue("p_rate", product.Rate);
-                    command.Parameters.AddWithValue("p_count_of_reviews", product.CountOfReviews);
+                    command.Parameters.AddWithValue("p_image_name", product.ImageName);
 
                     connection.Open();
                     await command.ExecuteNonQueryAsync();

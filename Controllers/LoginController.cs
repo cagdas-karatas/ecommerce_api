@@ -40,14 +40,15 @@ namespace staj_ecommerce_api.Controllers
                     {
                         user = new User
                         {
-                            Id = reader.GetInt32("id"),
+                            UserId = reader.GetInt32("id"),
                             UserName = reader.GetString("user_name"),
                             Password = reader.GetString("password"),
                             FirstName = reader.GetString("first_name"),
                             LastName = reader.GetString("last_name"),
                             PhoneNumber = reader.GetString("phone_number"),
                             Email = reader.GetString("email"),
-                            UserType = reader.GetString("user_type")
+                            UserType = reader.GetString("user_type"),
+                            ShopId = reader.GetInt32("shop_id")
                         };
                     }
                 }

@@ -127,7 +127,7 @@ namespace staj_ecommerce_api.Controllers
                     connection.Close();
                 }
 
-                return CreatedAtAction(nameof(GetProduct), new { product_id = product.ProductId }, product);
+                return Ok();
             }
 
             return BadRequest();

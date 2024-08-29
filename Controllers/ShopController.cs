@@ -41,6 +41,7 @@ namespace staj_ecommerce_api.Controllers
                             ShopName = reader.GetString("shop_name"),
                             TaxNumber = reader.GetString("tax_number"),
                             CompanyPhoneNumber = reader.GetString("company_phone_number"),
+                            ShopAddress = reader.GetString("shop_address"),
                             ApproveStatus = reader.GetString("approve_status"),
                             UserId = reader.GetInt32("user_id")
                         });
@@ -77,7 +78,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         [Authorize]
-        [HttpPost("answer_request")]
+        [HttpPost("{id}/{response}")]
         public async Task<IActionResult> AnswerShopRequest(int id, string response)
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))

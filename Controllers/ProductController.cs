@@ -21,7 +21,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts(int? shop_id)
         {
             var products = new List<Product>();
 
@@ -31,6 +31,7 @@ namespace staj_ecommerce_api.Controllers
                 {
                     CommandType = CommandType.StoredProcedure
                 };
+                command.Parameters.AddWithValue("s_id", shop_id);
 
                 connection.Open();
 
@@ -136,7 +137,7 @@ namespace staj_ecommerce_api.Controllers
         // PUT: api/Product/{id}
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> PutProduct(Product product)
+        public async Task<IActionResult> PutProduct([FromForm] Product product)
         {
             if(product.ProductId != null && ModelState.IsValid)
             {

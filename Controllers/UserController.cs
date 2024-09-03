@@ -48,7 +48,7 @@ namespace staj_ecommerce_api.Controllers
                             PhoneNumber = reader.GetString("phone_number"),
                             Email = reader.GetString("email"),
                             UserType = reader.GetString("user_type"),
-                            ShopId = reader.GetInt32("shop_id")
+                            ShopId = ConvertFromDBVal<int?>(reader.GetValue("shop_id"))
                         });
                     }
                 }
@@ -87,7 +87,7 @@ namespace staj_ecommerce_api.Controllers
                             PhoneNumber = reader.GetString("phone_number"),
                             Email = reader.GetString("email"),
                             UserType = reader.GetString("user_type"),
-                            ShopId = reader.GetInt32("shop_id")
+                            ShopId = ConvertFromDBVal<int?>(reader.GetValue("shop_id"))
                         };
                     }
                 }
@@ -200,6 +200,18 @@ namespace staj_ecommerce_api.Controllers
             }
 
             return Ok();
+        }
+
+        public static T ConvertFromDBVal<T>(object obj)
+        {
+            if (obj == null || obj == DBNull.Value)
+            {
+                return default(T); // returns the default value for the type
+            }
+            else
+            {
+                return (T)obj;
+            }
         }
 
         string HashPassword(string password)

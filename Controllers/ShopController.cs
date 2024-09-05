@@ -19,7 +19,7 @@ namespace staj_ecommerce_api.Controllers
         }
 
         [HttpGet("requests")]
-        public async Task<IEnumerable<ShopRequest>> GetShopRequests()
+        public async Task<IEnumerable<ShopRequest>> GetShopRequests([FromQuery] ShopRequest? shopRequest)
         {
             List<ShopRequest> shops = new List<ShopRequest>();
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -28,6 +28,13 @@ namespace staj_ecommerce_api.Controllers
                 {
                     CommandType = CommandType.StoredProcedure
                 };
+                command.Parameters.AddWithValue("r_id", shopRequest.ShopRequestId);
+                command.Parameters.AddWithValue("r_shop_name", shopRequest.ShopName);
+                command.Parameters.AddWithValue("r_tax_number", shopRequest.TaxNumber);
+                command.Parameters.AddWithValue("r_company_phone_number", shopRequest.CompanyPhoneNumber);
+                command.Parameters.AddWithValue("r_shop_address", shopRequest.ShopAddress);
+                command.Parameters.AddWithValue("r_approve_status", shopRequest.ApproveStatus);
+                command.Parameters.AddWithValue("r_user_id", shopRequest.UserId);
 
                 connection.Open();
 

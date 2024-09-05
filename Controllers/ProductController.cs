@@ -141,6 +141,7 @@ namespace staj_ecommerce_api.Controllers
         {
             if(product.ProductId != null && ModelState.IsValid)
             {
+                product.ImageName = product.ImageFile != null ? (await SaveImage(product.ImageFile)) : product.ImageName;
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     MySqlCommand command = new MySqlCommand("UpdateProduct", connection)

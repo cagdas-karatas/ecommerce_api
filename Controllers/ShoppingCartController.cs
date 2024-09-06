@@ -96,5 +96,24 @@ namespace staj_ecommerce_api.Controllers
                 return Ok();
             }
         }
+
+        [HttpDelete("clear")]
+        public async Task<IActionResult> ClearShoppingCart(int u_id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                MySqlCommand command = new MySqlCommand("ClearShoppingCart", connection)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                command.Parameters.AddWithValue("u_id", u_id);
+
+                connection.Open();
+                await command.ExecuteNonQueryAsync();
+                connection.Close();
+
+                return Ok();
+            }
+        }
     }
 }
